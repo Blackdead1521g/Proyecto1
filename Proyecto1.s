@@ -1,14 +1,14 @@
- /* Archivo: Postlab05.s
+ /* Archivo: Proyecto1
  * Dispositivo: PIC16F887
  * Autor: Kevin Alarcón
  * Compilador: pic-as (v2.30), MPLABX V6.05
  * 
  * 
- * Programa: Presionar RB6 o RB7 para incrementar o decrementar un contador y mostrarlo en tres displays multiplexados en unidades, decenas y centnas
- * Hardware: Push en RB6 y RB7, displays en puerto C
+ * Programa: Realizar un generacdor de funciones
+ * Hardware: Pusbotons, displays, resistencias, transistores, leds.
  * 
- * Creado: 20 de feb, 2023
- * Última modificación: 23 de feb, 2023
+ * Creado: 27 de feb, 2023
+ * Última modificación: 19 de marzo, 2023
  */
     
     PROCESSOR 16F887
@@ -39,31 +39,32 @@
     ;--------------------------MACROS------------------------------
     restart_TMR0 macro 
 	banksel TMR0 ;Nos ubicamos en el banco donde está TMR0
-	movf NTMR0, W;Cargamos al acumulador el valor que se le pondrá al TMR0
-	movwf TMR0 ;Cargamos el valor N calculado para un desborde de 10mS
+	movf NTMR0, W;Cargamos al acumulador la variable que contendrá el valor del N TMR0
+	movwf TMR0 ;Cargamos el valor N calculado
 	bcf T0IF ;Colocamos en cero la bandera del TMR0
     endm
     
     PSECT udata_bank0; common memory
 	count: DS 2 ;2 byte
 	count1: DS 2 ;2 byte
-	banderas: DS 1 ;1 bytes
+	senoidal: DS 1; 1 byte
+	banderas: DS 1 ;1 byte
 	display: DS 4 ;3 bytes
 	unidades: DS 2 ;2 bytes
 	decenas: DS 2 ;2 bytes
 	centenas: DS 2 ;2 bytes
 	millares: DS 2 ;2 bytes
-	NTMR0: DS 1
-	Fint: DS 1 ;Frecuencia de interrupción
-	BanderaCuadrada: DS 1
-	BanderaTriangular: DS 1
-	dient: DS 1
-	contador: DS 1
-	selector_graf: DS 1
-	Prescaler: DS 1
-	BanderaPresc: DS 1
-	BanderaGraf: DS 1
-	BanderaFrec: DS 1
+	NTMR0: DS 1 ;1 byte
+	BanderaCuadrada: DS 1 ;1 byte
+	BanderaTriangular: DS 1 ;1 byte
+	dient: DS 1 ;1 byte
+	contador: DS 1 ;1 byte
+	selector_graf: DS 1 ;1 byte
+	Prescaler: DS 1 ;1 byte
+	BanderaPresc: DS 1 ;1 byte
+	BanderaGraf: DS 1 ;1 byte
+	BanderaFrec: DS 1 ;1 byte
+	BanderaRebote: DS 1 ;1 byte
 	
  
     PSECT udata_shr
@@ -123,10 +124,10 @@
     table_NTMR0128:
 	clrf PCLATH
 	bsf PCLATH, 0 ;PCLATH en 01
-	andlw 0XFF ;Preguntar al profe por el límite de tabla
+	andlw 0X3F 
 	addwf PCL ;PC = PCLATH + PCL | Sumamos W al PCL para seleccionar una dato de la tabla
 	;Prescaler 1:128
-	retlw 00000000B ;0 Hz
+	retlw 00000000B ;60 Hz
 	retlw 01100100B //100 ;100Hz
 	retlw 10110010B //178 ;200Hz
 	retlw 11001100B //204 ;300Hz
@@ -181,8 +182,142 @@
 	retlw 00110000B ;48 - 4800Hz
 	retlw 00110100B ;52 - 4900Hz
 	retlw 00111000B ;56 - 5000Hz
-	//retlw B ;0Hz
-
+	
+    ORG 300h  ;posición para el código
+    table_senoidal:
+	clrf PCLATH
+	bsf PCLATH, 0
+	bsf PCLATH, 1 ;PCLATH en 11
+	andlw 0XFF ;
+	addwf PCL ;PC = PCLATH + PCL | Sumamos W al PCL para seleccionar una dato de la tabla
+	RETLW 10000101B
+	RETLW 10001011B
+	RETLW 10010010B
+	RETLW 10011000B
+	RETLW 10011110B
+	RETLW 10100100B
+	RETLW 10101010B
+	RETLW 10110000B
+	RETLW 10110110B
+	RETLW 10111011B
+	RETLW 11000001B
+	RETLW 11000110B
+	RETLW 11001011B
+	RETLW 11010000B
+	RETLW 11010101B
+	RETLW 11011001B
+	RETLW 11011101B
+	RETLW 11100010B
+	RETLW 11100101B
+	RETLW 11101001B
+	RETLW 11101100B
+	RETLW 11101111B
+	RETLW 11110010B
+	RETLW 11110101B
+	RETLW 11110111B
+	RETLW 11111001B
+	RETLW 11111011B
+	RETLW 11111100B
+	RETLW 11111101B
+	RETLW 11111110B
+	RETLW 11111110B
+	RETLW 11111111B
+	RETLW 11111110B
+	RETLW 11111110B
+	RETLW 11111101B
+	RETLW 11111100B
+	RETLW 11111011B
+	RETLW 11111001B
+	RETLW 11110111B
+	RETLW 11110101B
+	RETLW 11110010B
+	RETLW 11101111B
+	RETLW 11101100B
+	RETLW 11101001B
+	RETLW 11100101B
+	RETLW 11100010B
+	RETLW 11011101B
+	RETLW 11011001B
+	RETLW 11010101B
+	RETLW 11010000B
+	RETLW 11001011B
+	RETLW 11000110B
+	RETLW 11000001B
+	RETLW 10111011B
+	RETLW 10110110B
+	RETLW 10110000B
+	RETLW 10101010B
+	RETLW 10100100B
+	RETLW 10011110B
+	RETLW 10011000B
+	RETLW 10010010B
+	RETLW 10001011B
+	RETLW 10000101B
+	RETLW 01111111B
+	RETLW 01111001B
+	RETLW 01110011B
+	RETLW 01101100B
+	RETLW 01100110B
+	RETLW 01100000B
+	RETLW 01011010B
+	RETLW 01010100B
+	RETLW 01001110B
+	RETLW 01001000B
+	RETLW 01000011B
+	RETLW 00111101B
+	RETLW 00111000B
+	RETLW 00110011B
+	RETLW 00101110B
+	RETLW 00101001B
+	RETLW 00100101B
+	RETLW 00100001B
+	RETLW 00011100B
+	RETLW 00011001B
+	RETLW 00010101B
+	RETLW 00010010B
+	RETLW 00001111B
+	RETLW 00001100B
+	RETLW 00001001B
+	RETLW 00000111B
+	RETLW 00000101B
+	RETLW 00000011B
+	RETLW 00000010B
+	RETLW 00000001B
+	RETLW 00000000B
+	RETLW 00000000B
+	RETLW 00000000B
+	RETLW 00000000B
+	RETLW 00000000B
+	RETLW 00000001B
+	RETLW 00000010B
+	RETLW 00000011B
+	RETLW 00000101B
+	RETLW 00000111B
+	RETLW 00001001B
+	RETLW 00001100B
+	RETLW 00001111B
+	RETLW 00010010B
+	RETLW 00010101B
+	RETLW 00011001B
+	RETLW 00011100B
+	RETLW 00100001B
+	RETLW 00100101B
+	RETLW 00101001B
+	RETLW 00101110B
+	RETLW 00110011B
+	RETLW 00111000B
+	RETLW 00111101B
+	RETLW 01000011B
+	RETLW 01001000B
+	RETLW 01001110B
+	RETLW 01010100B
+	RETLW 01011010B
+	RETLW 01100000B
+	RETLW 01100110B
+	RETLW 01101100B
+	RETLW 01110011B
+	RETLW 01111001B
+	RETLW 01111111B
     ;---------------------configuración----------------
     main:
 	call config_io ;Llamamos a nuestra subrutina config_io para configurar los pines antes de ejecutar el código
@@ -192,11 +327,21 @@
 	call config_int_enable ;Llamamos a nuestra función que habilita las interrupciones en general
 	banksel PORTA ;Se busca el banco en el que está PORTA
 	
+	;Le asignamos el valor inicial N del TMR0
+	banksel TMR0
+	clrf contador
+	movf contador, W
+	call table_NTMR0128
+	movwf NTMR0
+	
+	
     
     ;-----------------------loop principal---------------
     loop:
-	movf contador, W
+	;Le metemos el valor de nuestro contador a la variable count
+	movf contador, W 
 	movwf count
+	;Movemos la bandera de frecuencia al puerto E para nuestros leds
 	movf BanderaFrec, W
 	movwf PORTE
 	call preparar_display ;Llamamos a nuestra función que le asigna cada valor a su respectivo display
@@ -218,8 +363,8 @@
 	banksel TRISB ;Nos ubicamos en el banco del TRISB
 	bsf IOCB, UP ;Habilitamos la interrupción al cambiar el estado de RB6
 	bsf IOCB, DOWN ;Habilitamos la interrupción al cambiar el estado de RB7
-	bsf IOCB, UP1 ;Habilitamos la interrupción al cambiar el estado de RB6
-	bsf IOCB, DOWN1 ;Habilitamos la interrupción al cambiar el estado de RB7
+	bsf IOCB, UP1 ;Habilitamos la interrupción al cambiar el estado de RB4
+	bsf IOCB, DOWN1 ;Habilitamos la interrupción al cambiar el estado de RB5
 	bsf IOCB, 0 ;Habilitamos la interrupción al cambiar el estado de RB0
 	
 	banksel PORTB 
@@ -244,7 +389,6 @@
 	bsf TRISB, 0
 	
 	;Configuramos las salidas
-	//movlw 0b00000000
 	clrf TRISA
 	clrf TRISD
 	clrf TRISC
@@ -253,9 +397,11 @@
 	bcf OPTION_REG, 7 ;Habilitamos Pull ups
 	bsf WPUB, UP
 	bsf WPUB, DOWN
+	bsf WPUB, UP1
+	bsf WPUB, DOWN1
 	bsf WPUB, 0
 	
-	;Nos dirigimos al banco 0 en donde se encuentran los puertos y procedemos a limpiar cada puerto después de cada reinicio
+	;Nos dirigimos al banco 0 en donde se encuentran los puertos y procedemos a limpiar nuestras variables y cada puerto después de cada reinicio
 	bcf STATUS, 5 ;banco00
 	bcf STATUS, 6 
 	clrf banderas
@@ -264,10 +410,24 @@
 	clrf BanderaGraf
 	clrf BanderaPresc
 	clrf BanderaFrec
+	clrf BanderaRebote
 	clrf dient
 	clrf count
+	clrf count+1
 	clrf count1
+	clrf count1+1
+	clrf senoidal
 	clrf display
+	clrf display+1
+	clrf display+2
+	clrf display+3
+	clrf unidades
+	clrf decenas
+	clrf centenas
+	clrf millares
+	clrf contador
+	clrf selector_graf
+	clrf Prescaler
 	clrf NTMR0
 	clrf PORTD
 	clrf PORTC
@@ -276,14 +436,14 @@
 	return ;Retorna a donde fue llamada esta función
 
     conv_millares: ;Esta función nos sirve para extraer las centenas de nuestro contador 
-	movlw 1000 ;Movemos 100 al acumulador
-	subwf count, F ;Le restamos a nuestra variable de contador los 100 del acumulador y lo guardamos en el registro
+	movlw 1000 ;Movemos 1000 al acumulador
+	subwf count, F ;Le restamos a nuestra variable de contador los 1000 del acumulador y lo guardamos en el registro
 	incf millares ;Incrementamos centenas
 	btfsc STATUS, 0 ;Revisamos si queda un acarreo después de la resta
 	goto $-4 ;Si queda algún acarreo del bit mas significativo volvemos a repetir el procedimiento anterior
 	decf millares ;Si no queda ningún acarreo, esto significa que pasamos a un valor negativo por lo tanto le decrementamos el valor
 		      ; a que le habíamos incrementado a centenas inicialmente
-	movlw 1000 ;Movemos 100 al acumulador 
+	movlw 1000 ;Movemos 1000 al acumulador 
 	addwf count, F ;Le ingresamos dicho número a nuestra variable contador por si en dado caso queda negativa nuestra variable
 	return
 
@@ -325,25 +485,30 @@
 	
     preparar_display: ;Esta función configura cada valor en su respectivo display
 	;Los primeros 2 displays se quedaran con 0
-	//movf millares, W
-	movlw 0
-	call table
-	movwf display+3
-	
-	//movf centenas, W ;Movemos decenas al acumulador
 	movlw 0
 	call table ;Mandamos a llamar a la tabla y extraemos un valor
-	movwf display+2 ;Movemos el valor extraido a nuestra variable display
+	movwf display+2 ;Movemos el valor extraido a nuestra variable display+2
 	
-	;Este será el tercer display donde irán las millares del contador
+	;Colocamos un número 6 en el display 3 solo cuando el contador esta en 0, después se mantiene en 0
+	movf contador, W
+	addlw 0
+	btfsc ZERO
+	goto $+3
+	movlw 0
+	goto $+2
+	movlw 6
+	call table ;Mandamos a llamar a la tabla y extraemos un valor
+	movwf display+3 ;Movemos el valor extraido a nuestra variable display+3
+	
+	;Este será el tercer display donde irán las decenas del contador
 	movf decenas, W ;Movemos centenas al acumulador
 	call table ;Mandamos a llamar a la tabla y extraemos un valor
 	movwf display+1 ;Movemos el valor extraido a nuestra variable display+1
 	
-	;Este será el cuarto display donde irán las centenas del contador
+	;Este será el cuarto display donde irán las unidades del contador
 	movf unidades, W ;Movemos unidades al acumulador
 	call table ;Mandamos a llamar a la tabla y extraemos un valor
-	movwf display ;Movemos el valor extraido a nuestra variable display+2
+	movwf display ;Movemos el valor extraido a nuestra variable display
 	return 
 	
 	
@@ -362,7 +527,7 @@
 	bcf OPTION_REG, 3 ;Asignamos PRESCALER a TMR0
 	bsf OPTION_REG, 2 
 	bsf OPTION_REG, 1
-	bcf OPTION_REG, 0 ;Prescaler de 256 con configuración 111
+	bcf OPTION_REG, 0 ;Prescaler de 128 con configuración 110
 	restart_TMR0 ;Reiniciamos el TMR0 con nuestra función
 	return ;Retorna a donde fue llamada esta función
 
@@ -372,71 +537,100 @@
 	bsf GIE ;INTCON ;Habilitamos las interrupciones en general
 	bsf RBIE ;INTCON ;Habilitamos la interrupción del cambio en el puerto B
 	bcf RBIF ;INTCON ;Ponemos en cero la bandera del cambio de estado para que se reinicie la verificación
-	return
+	return ;Retorna a donde fue llamada esta función
 	
     int_t0:
 	restart_TMR0 ;Reiniciamos el TMR0
-	/*incf count1 ;Incrementamos la variable de nuestro contador del TMR0
-	movf count1, W ;Movemos nuestra variable al acumulador
-	sublw 10 ;A 100 le restamos lo que hay en el acumulador y lo gradamos en el acumulador
-	btfss ZERO ;STATUS, 2 ;verificamos si la bandera de Zero se activa
-	return ;Sino se activa retornamos de la función porque queremos que se ejecute solo cuando hayan pasado 1000ms (1s)
-	clrf count1*/
-	//incf PORTA
-	//btfsc BanderaGraf, 0
-	//incf PORTA
-	call Graf_Selection
-	//call GrafCuadrada
+	call Mode_graf ;Llamamos a nuestra función de selección de gráfica
 	call display_selections ;Llamos a nuestra función de selección de display
-	return
+	return ;Retorna a donde fue llamada esta función
+	
+    Mode_graf: ;Esta subrutina es nuestro selector de gráfica
+	movf BanderaGraf, W ;movemos nuestra bandera de gráfica al acumulador
+	sublw 0 ;Verificamos si está en 0 nuestra bandera
+	btfsc ZERO
+	call GrafCuadrada ;Si está en 0 mandamos a llamar a la onda cuadrada
+	movf BanderaGraf, W ;movemos nuestra bandera de gráfica al acumulador
+	sublw 1 ;Verificamos si está en 1 nuestra bandera
+	btfsc ZERO
+	call GrafDiente ;Si está en 1 mandamos a llamar a la onda de diente de sierra
+	movf BanderaGraf, W ;movemos nuestra bandera de gráfica al acumulador
+	sublw 2 ;Verificamos si está en 2 nuestra bandera
+	btfsc ZERO
+	call GrafTriangular ;Si está en 2 mandamos a llamar a la onda triangular
+	movf BanderaGraf, W ;movemos nuestra bandera de gráfica al acumulador
+	sublw 3 ;Verificamos si está en 3 nuestra bandera
+	btfsc ZERO
+	call GrafSenoidal ;Si está en 0 mandamos a llamar a la onda senoidal
+	return ;Retorna a donde fue llamada esta función
     
-    Graf_Selection:
-	btfsc BanderaGraf, 0
-	call GrafTriangular
-	btfss BanderaGraf, 0
-	call GrafCuadrada
-	return
-    
-    GrafCuadrada:
-	incf count1 ;Incrementamos la variable de nuestro contador del TMR0
+    GrafDiente:
+	incf count1 ;Incrementamos la variable de nuestro contador 
 	movf count1, W ;Movemos nuestra variable al acumulador
-	sublw 10 ;A 100 le restamos lo que hay en el acumulador y lo gradamos en el acumulador
+	sublw 2 ;A 100 le restamos lo que hay en el acumulador y lo gradamos en el acumulador
+	btfss ZERO ;STATUS, 2 ;verificamos si la bandera de Zero se activa
+	return ;Sino se activa retornamos de la función porque queremos que se ejecute solo cuando haya pasado un determinado tiempo
+	clrf count1 ;Limpiamos nuestra variable de delay
+	incf PORTA ;incrementamos el puerto A
+	return ;Retorna a donde fue llamada esta función
+	
+    GrafSenoidal:
+	incf count1 ;Incrementamos la variable de nuestro contador 
+	movf count1, W ;Movemos nuestra variable al acumulador
+	sublw 4 ;A 100 le restamos lo que hay en el acumulador y lo gradamos en el acumulador
+	btfss ZERO ;STATUS, 2 ;verificamos si la bandera de Zero se activa
+	return ;Sino se activa retornamos de la función porque queremos que se ejecute solo cuando haya pasado un determinado tiempo
+	clrf count1 ;Limpiamos nuestra variable de delay
+	incf senoidal ;Incrementamos nuestro contador
+	movf senoidal, W ;Lo movemos al acumulador
+	call table_senoidal ;Mandamos a llamar a la tabla de valores para la onda senoidal
+	movwf PORTA ;Movemos el valor de la tabla al puerto A
+	movf senoidal, W ;Movemos nuestra variable contador al acumulador
+	sublw 127 ;Revisamos si llegó al número máximo (127)
+	btfsc ZERO
+	clrf senoidal ;Si llegó reseteamos nuestro contador para que solo tome los 127 valores de la tabla
+	return ;Retorna a donde fue llamada esta función
+
+    GrafCuadrada:
+	incf count1 ;Incrementamos la variable de nuestro contador 
+	movf count1, W ;Movemos nuestra variable al acumulador
+	sublw 508 ;A 100 le restamos lo que hay en el acumulador y lo gradamos en el acumulador
 	btfss ZERO ;STATUS, 2 ;verificamos si la bandera de Zero se activa
 	return ;Sino se activa retornamos de la función porque queremos que se ejecute solo cuando hayan pasado 1000ms (1s)*/
-	clrf count1
-	btfsc BanderaCuadrada, 0
-	goto caida
-	goto subida
+	clrf count1 ;Limpiamos nuestra variable de delay
+	btfsc BanderaCuadrada, 0 ;Verificamos si el bit 0 de la bandera de onda cuadrada está encendido
+	goto caida ;Si está encendido hacemos un salto a la subrutina de caida
+	goto subida ;Si está apagado hacemos un salto a la subrutina de subida
 	
     subida:
-	movlw 0b11111111
+	movlw 0b11111111 ;Le ingresamos el valor de 255 al puerto A para que sea la subida de nuestra onda cuadrada
 	movwf PORTA
-	goto toggle_b0
+	goto toggle_b0 ;Hacemos un salto a la subrutina de toggle_b0
 	
     caida:
-	clrf PORTA
+	clrf PORTA ;Limpiamos el puerto A para que sea la bajada de nuestra onda cuadrada
 
     toggle_b0:
-	movlw 0x01
-	xorwf BanderaCuadrada, F
-	return
+	movlw 0x01 ;Movemos 00001111B al acumulador
+	xorwf BanderaCuadrada, F ;Hacemos un xor entre el acumulador entre el acumulador y la bandera de onda cuadrada, esto para que la bandera cambie de valor
+	return ;Retorna a donde fue llamada esta función
 	
     GrafTriangular:
-	btfsc BanderaTriangular, 0
-	goto $+8
-	incf PORTA
-	movf PORTA, W
-	sublw 254
+	btfsc BanderaTriangular, 0 ;Revisamos si el primer bit de nuestra bandera triangular está encendido
+	goto $+8 ;Si esta encendido nos saltamos 8 lineas para empezar el decremento del puerto A
+	incf PORTA ;Si está apagado incrementamos el puerto A
+	movf PORTA, W ;Movemos el puerto A al acumulador
+	sublw 254 ;Verificamos si el puerto A llega a 254
 	btfss ZERO
-	goto $+6
-	bsf BanderaTriangular, 0
-	goto $+2
-	decfsz PORTA, 1
-	goto $+2
-	clrf BanderaTriangular
-	return
+	goto $+6 ;Si jo ha llegado nos saltamos 6 lineas  para que retorne
+	bsf BanderaTriangular, 0 ;S, si llega encendemos el bit 0 de nuestra bandera triangular
+	goto $+2 ;Nos saltamos 2 lineas para evitar el decremento
+	decfsz PORTA, 1 ;Si el bit 0 de nuestra bandera triangular esta encendido, decrementamos el puerto A 
+	goto $+2 ;Nos saltamos otras dos lineas para retornar y evitar limpiar nuestra bandera
+	clrf BanderaTriangular ;Cuando el decremento del puerto A llegue hasta 0, limpiaremos nuestra bandera triangular
+	return ;Retorna a donde fue llamada esta función
 	
-    display_selections:
+    display_selections: ;esta función nos permite el multiplexeo de displays
 	;Limpiamos los bits utilizador el puerto E
 	bcf PORTD, 0
 	bcf PORTD, 1
@@ -444,58 +638,58 @@
 	bcf PORTD, 3
 	
 	
-	btfss banderas, 0
-	goto display_0 ;Si no se activa saltamos a la función display_1
-	btfsc banderas, 1 ;Verificamos si el bit 0 de banderas se activa
-	goto display_1 ;Si se activa saltamos a la función display_0
-	btfsc banderas, 2 ;Verificamos si el bit 1 de banderas se activa
+	btfss banderas, 0 ;Verificamos si el bit 0 de banderas se activa
+	goto display_0 ;Si no se activa saltamos a la función display_0
+	btfsc banderas, 1 ;Verificamos si el bit 1 de banderas se activa
+	goto display_1 ;Si se activa saltamos a la función display_1
+	btfsc banderas, 2 ;Verificamos si el bit 2 de banderas se activa
 	goto display_2 ;Si se activa saltamos a la función display_2
-	btfsc banderas, 3
-	goto display_3
+	btfsc banderas, 3 ;Verificamos si el bit 3 de banderas se activa
+	goto display_3 ;Si se activa saltamos a la función display_3
 	
     display_0:
-	movf display+2, W ;Movemos nuestra variable display al acumulador
+	movf display+2, W ;Movemos nuestra variable display+2 al acumulador
 	movwf PORTC ;Movemos este valor al puerto C
-	bsf PORTD, 0 ;Activamos el bit 1 que activará su respectivo display
+	bsf PORTD, 0 ;Activamos el bit 0 que activará su respectivo display
 	bsf banderas, 1 ;Ponemos en 1 el bit 1 de banderas
-	bsf banderas, 0
-	return
+	bsf banderas, 0 ;Ponemos en 1 el bit 0 de banderas
+	return ;Retorna a donde fue llamada esta función
 	
     display_1:
-	movf display+3, W ;Movemos nuestra variable display+1 al acumulador
+	movf display+3, W ;Movemos nuestra variable display+3 al acumulador
 	movwf PORTC ;Movemos este valor al puerto C
-	bsf PORTD, 1 ;Activamos el bit 0 que activará su respectivo display
-	bcf banderas, 1 ;Ponemos en 1 el bit 0 de banderas
-	bsf banderas, 2
-	return
+	bsf PORTD, 1 ;Activamos el bit 1 que activará su respectivo display
+	bcf banderas, 1 ;Ponemos en 0 el bit 1 de banderas
+	bsf banderas, 2 ;Ponemos en 1 el bit 2 de banderas
+	return ;Retorna a donde fue llamada esta función
 	
     display_2:
-	movf display, W ;Movemos nuestra variable display+2 al acumulador
+	movf display, W ;Movemos nuestra variable display al acumulador
 	movwf PORTC ;Movemos este valor al puerto C
 	bsf PORTD, 2 ;Activamos el bit 2 que activará su respectivo display
-	bcf banderas, 2 ;Ponemos en 0 el bit 1 de banderas
-	bsf banderas, 3 ;Ponemos en 0 el bit 2 de banderas
-	return
+	bcf banderas, 2 ;Ponemos en 0 el bit 2 de banderas
+	bsf banderas, 3 ;Ponemos en 1 el bit 3 de banderas
+	return ;Retorna a donde fue llamada esta función
     
     display_3:
-	movf display+1, W ;Movemos nuestra variable display+2 al acumulador
+	movf display+1, W ;Movemos nuestra variable display+1 al acumulador
 	movwf PORTC ;Movemos este valor al puerto C
-	bsf PORTD, 3 ;Activamos el bit 2 que activará su respectivo display
+	bsf PORTD, 3 ;Activamos el bit 3 que activará su respectivo display
 	bcf banderas, 0 ;Ponemos en 0 el bit 0 de banderas
-	bcf banderas, 3 ;Ponemos en 0 el bit 2 de banderas
-	return
+	bcf banderas, 3 ;Ponemos en 0 el bit 3 de banderas
+	return ;Retorna a donde fue llamada esta función
     
     int_iocb:
 	banksel PORTB ;Nos ubicamos en el banco del purto B
-	clrf BanderaPresc
-	//bsf BanderaFrec, 0
+	clrf BanderaPresc ;Limpiamos nuestra bandera de prescaler
 	
 	;Mode_Graf
-	btfsc PORTB, 0
-	goto $+4
-	movlw 0x01
-	xorwf BanderaGraf, F
-	clrf PORTA
+	btfsc PORTB, 0 ;Verificamos si el bit 0 de nuestro puerto B se enciende
+	goto $+5 ;Si no se enciende nos saltamos 5 lineas para haga la siguiente verificación
+	incf BanderaGraf ;Si se enciende, incrementamos nuetsra bandera de grafica
+	movlw 0b00000011 ;Movemos un 3 al acumulador
+	andwf BanderaGraf, F ;Hacemos un and entre el acumulador y nuestra bandera de gráfica, esto es para ponerle un límite de 3 a nuestra bandera
+	clrf PORTA ;Limpiamos el puerto A
 	
 	;Mode_Frec
 	btfsc PORTB, UP1 ;Hz revisamos si esta oprimido el botón de Hz
@@ -510,118 +704,144 @@
 	;Mode_INC_DEC
 	btfsc	PORTB, UP ;Al estar en pullup normalmente el boton está en 1, así que verificamos si está en 1 (desoprimido) o en 0 (oprimido
 			;el bit 6 del puerto B
-	goto $+8 ;Sino está oprimido nos saltamos a la siquieren comprobación
-	btfsc BanderaFrec, 0 ;Revisamos el bit 0 de la bandera de frecuencia para ver si estamos en HZ
+	call antireboteinc ;Si no está oprimido llamamos a nuestra función de antirebote
+	btfsc PORTB, UP ;Verificamos si está oprimido el bit 6 del puerto A
+	goto $+11 ;Sino está orpimido hacemos un salto a la siguiente verificación
+	btfss BanderaRebote, 0 ;Si, si está oprimido verificamos si el bit 0 de nuestra bandera de rebote se enciende
+	goto $+9 ;Sino se enciende hacemos un salto a la siguiente verificación
+	btfsc BanderaFrec, 0 ;Si se endiende revisamos el bit 0 de la bandera de frecuencia para ver si estamos en HZ
 	incf contador ;Si está prendido, incrementamos el contador en 1 ya que queremos ir de 100 en 100Hz
 	btfss BanderaFrec, 1 ;Revisamos el bit 1 de la bandera de frecuencia para ver si estamos en KHZ
 	goto $+4 ;Sino está encendido nos saltamos a la siquieren comprobación
 	incf contador ;Si está prendido incrementamos en 1 el contador y le sumamos 4 para que vaya incrementando de 500 en 500Hz
 	movlw 4
 	addwf contador, F
+	clrf BanderaRebote ;Limpiamos nuestra bandera de rebote 
 	
 	btfsc	PORTB, DOWN ;Al estar en pullup normalmente el boton está en 1, así que verificamos si está en 1 (desoprimido) o en 0 (oprimido
 			;el bit 6 del puerto B
-	goto $+8 ;Sino está oprimido nos saltamos a la siquieren comprobación
-	btfsc BanderaFrec, 0 ;Revisamos el bit 0 de la bandera de frecuencia para ver si estamos en HZ
+	call antirebotedec ;Si no está oprimido llamamos a nuestra función de antirebote
+	btfsc PORTB, DOWN ;Verificamos si está oprimido el bit 7 del puerto A
+	goto $+11 ;Sino está orpimido hacemos un salto a la siguiente verificación
+	btfss BanderaRebote, 1 ;Si, si está oprimido verificamos si el bit 1 de nuestra bandera de rebote se enciende
+	goto $+9 ;Sino se enciende hacemos un salto a la siguiente verificación
+	btfsc BanderaFrec, 0 ;Si se enciende revisamos el bit 0 de la bandera de frecuencia para ver si estamos en HZ
 	decf contador ;Si está prendido, decrementamos el contador en 1 ya que queremos ir de 100 en 100Hz
 	btfss BanderaFrec, 1 ;Revisamos el bit 1 de la bandera de frecuencia para ver si estamos en KHZ
 	goto $+4 ;Sino está encendido nos saltamos a la siquieren comprobación
 	decf contador ;Si está prendido decrementamos en 1 el contador y le sumamos 4 para que vaya decrementando de 500 en 500Hz
 	movlw 4
 	subwf contador, F
+	clrf BanderaRebote ;Limpiamos nuestra bandera de rebote 
 	
-	movf contador, W
-	sublw 4
+	;Limite
+	movf contador, W ;Movemos nuestra variable contador al acumulador
+	sublw 50 ;revisamos si nuestra contador llega a 50
+	btfsc STATUS, 0 
+	goto $+2 ;Mientras no llegue nos saltamos a la siguiente instrucción
+	clrf contador ;Cuando llegue reseteamos nuestra variable contador para que no cuente más allá de los 50 valores de la tabla
+	
+	
+	movf contador, W ;Movemos nuestro contador al acumulador
+	sublw 4 ;verificamos si nuestro contador llega a 4
 	btfsc STATUS, 0
-	goto $+17
-	movf contador, W
-	sublw 9
+	goto $+17 ;Mientras no llegue al valor establecido, haremos un salto a una instrucción donde se habilitará la bandera que le corresponde el prescaler 1:128
+	movf contador, W ;Movemos nuestro contador al acumulador
+	sublw 9 ;verificamos si nuestro contador llega a 9
 	btfsc STATUS, 0
-	goto $+15
-	movf contador, W
-	sublw 19
+	goto $+15 ;Mientras no llegue al valor establecido, haremos un salto a una instrucción donde se habilitará la bandera que le corresponde el prescaler 1:16
+	movf contador, W ;Movemos nuestro contador al acumulador
+	sublw 19 ;verificamos si nuestro contador llega a 19
 	btfsc STATUS, 0
-	goto $+13
-	movf contador, W
-	sublw 39
+	goto $+13 ;Mientras no llegue al valor establecido, haremos un salto a una instrucción donde se habilitará la bandera que le corresponde el prescaler 1:8
+	movf contador, W ;Movemos nuestro contador al acumulador
+	sublw 39 ;verificamos si nuestro contador llega a 39
 	btfsc STATUS, 0
-	goto $+11
-	movf contador, W
-	sublw 50
+	goto $+11 ;Mientras no llegue al valor establecido, haremos un salto a una instrucción donde se habilitará la bandera que le corresponde el prescaler 1:4
+	movf contador, W ;Movemos nuestro contador al acumulador
+	sublw 50 ;verificamos si nuestro contador llega a 50
 	btfsc STATUS, 0
-	goto $+9
+	goto $+9 ;Mientras no llegue al valor establecido, haremos un salto a una instrucción donde se habilitará la bandera que le corresponde el prescaler 1:2
 
 	
-	bsf BanderaPresc, 0
-	goto $+8
-	bsf BanderaPresc, 1
-	goto $+6
-	bsf BanderaPresc, 2
-	goto $+4
-	bsf BanderaPresc, 3
-	goto $+2
-	bsf BanderaPresc, 4
+	bsf BanderaPresc, 0 ;Seteamos el bit 0 de nuestra bandera de prescaler que permite habilitar el prescaler 1:128
+	goto $+8 ;Hacemos un salto directo a nuestra comprobación de banderas
+	bsf BanderaPresc, 1 ;Seteamos el bit 1 de nuestra bandera de prescaler que permite habilitar el prescaler 1:16
+	goto $+6 ;Hacemos un salto directo a nuestra comprobación de banderas
+	bsf BanderaPresc, 2 ;Seteamos el bit 2 de nuestra bandera de prescaler que permite habilitar el prescaler 1:8
+	goto $+4 ;Hacemos un salto directo a nuestra comprobación de banderas
+	bsf BanderaPresc, 3 ;Seteamos el bit 3 de nuestra bandera de prescaler que permite habilitar el prescaler 1:4
+	goto $+2 ;Hacemos un salto directo a nuestra comprobación de banderas
+	bsf BanderaPresc, 4 ;Seteamos el bit 4 de nuestra bandera de prescaler que permite habilitar el prescaler 1:2
 	
-	btfsc BanderaPresc, 0
-	call Presc128
-	btfsc BanderaPresc, 1
-	call Presc16
-	btfsc BanderaPresc, 2
-	call Presc8
-	btfsc BanderaPresc, 3
-	call Presc4
-	btfsc BanderaPresc, 4
-	call Presc2
-	bcf RBIF
+	btfsc BanderaPresc, 0 ;Verificamos si el bit 0 de nuestra bandera de prescaler está encendido
+	call Presc128 ;Si está prendido, llamamos a nuestra función de prescaler 1:128
+	btfsc BanderaPresc, 1 ;Verificamos si el bit 1 de nuestra bandera de prescaler está encendido
+	call Presc16 ;Si está prendido, llamamos a nuestra función de prescaler 1:16
+	btfsc BanderaPresc, 2 ;Verificamos si el bit 2 de nuestra bandera de prescaler está encendido
+	call Presc8 ;Si está prendido, llamamos a nuestra función de prescaler 1:8
+	btfsc BanderaPresc, 3 ;Verificamos si el bit 3 de nuestra bandera de prescaler está encendido
+	call Presc4 ;Si está prendido, llamamos a nuestra función de prescaler 1:4
+	btfsc BanderaPresc, 4 ;Verificamos si el bit 4 de nuestra bandera de prescaler está encendido
+	call Presc2 ;Si está prendido, llamamos a nuestra función de prescaler 1:2
+	bcf RBIF ;Limpiamos la bandera de interrupción del puerto B
 	return ;Retornamos de nuestra función
+	
+    antireboteinc:
+	bsf BanderaRebote, 0 ;Seteamos el bit 0 de nuestra bandera de antirebote
+	return ;Retorna a donde fue llamada esta función
 
+    antirebotedec:
+	bsf BanderaRebote, 1 ;Seteamos el bit 1 de nuestra bandera de antirebote
+	return ;Retorna a donde fue llamada esta función
+    
     Presc128:
-	movlw 00010110B
+	movlw 00010110B ;Movemos el valor que le queremos meter al option_reg al acumulador para que tenga un prescaler de 1:128
 	banksel OPTION_REG
-	movwf OPTION_REG
+	movwf OPTION_REG ;Posteriormente le ingresamos el valor del acumulador al oprtion reg, esto nos permite ingresarle un nuevo prescaler al TMR0
 	banksel PORTB
-	movf contador, W
-	call table_NTMR0128
-	movwf NTMR0
-	return
+	movf contador, W ;Movemos nuestra contador de frecuencias al acumulador
+	call table_NTMR0128 ;Mandamos a llamar a nuestra tabla que contiene los valores del TMR0
+	movwf NTMR0 ;Movemos el valor obtenido de la tabla al registro N del TMR0
+	return ;Retorna a donde fue llamada esta función
 
     Presc16:
-	movlw 00010011B
+	movlw 00010011B ;Movemos el valor que le queremos meter al option_reg al acumulador para que tenga un prescaler de 1:16
 	banksel OPTION_REG
-	movwf OPTION_REG
+	movwf OPTION_REG  ;Posteriormente le ingresamos el valor del acumulador al oprtion reg, esto nos permite ingresarle un nuevo prescaler al TMR0
 	banksel PORTB
-	movf contador, W
-	call table_NTMR0128
-	movwf NTMR0
-	return
+	movf contador, W ;Movemos nuestra contador de frecuencias al acumulador
+	call table_NTMR0128 ;Mandamos a llamar a nuestra tabla que contiene los valores del TMR0
+	movwf NTMR0 ;Movemos el valor obtenido de la tabla al registro N del TMR0
+	return ;Retorna a donde fue llamada esta función
 
     Presc8:
-	movlw 00010010B
+	movlw 00010010B ;Movemos el valor que le queremos meter al option_reg al acumulador para que tenga un prescaler de 1:8
 	banksel OPTION_REG
-	movwf OPTION_REG
+	movwf OPTION_REG ;Posteriormente le ingresamos el valor del acumulador al oprtion reg, esto nos permite ingresarle un nuevo prescaler al TMR0
 	banksel PORTB
-	movf contador, W
-	call table_NTMR0128
-	movwf NTMR0
-	return
+	movf contador, W ;Movemos nuestra contador de frecuencias al acumulador
+	call table_NTMR0128 ;Mandamos a llamar a nuestra tabla que contiene los valores del TMR0
+	movwf NTMR0 ;Movemos el valor obtenido de la tabla al registro N del TMR0
+	return ;Retorna a donde fue llamada esta función
 	
     Presc4:
-	movlw 00010001B
+	movlw 00010001B ;Movemos el valor que le queremos meter al option_reg al acumulador para que tenga un prescaler de 1:4
 	banksel OPTION_REG
-	movwf OPTION_REG
+	movwf OPTION_REG ;Posteriormente le ingresamos el valor del acumulador al oprtion reg, esto nos permite ingresarle un nuevo prescaler al TMR0
 	banksel PORTB
-	movf contador, W
-	call table_NTMR0128
-	movwf NTMR0
-	return
+	movf contador, W ;Movemos nuestra contador de frecuencias al acumulador
+	call table_NTMR0128 ;Mandamos a llamar a nuestra tabla que contiene los valores del TMR0
+	movwf NTMR0 ;Movemos el valor obtenido de la tabla al registro N del TMR0
+	return ;Retorna a donde fue llamada esta función
 	
     Presc2:
-	movlw 00010000B
+	movlw 00010000B ;Movemos el valor que le queremos meter al option_reg al acumulador para que tenga un prescaler de 1:2
 	banksel OPTION_REG
-	movwf OPTION_REG
+	movwf OPTION_REG ;Posteriormente le ingresamos el valor del acumulador al oprtion reg, esto nos permite ingresarle un nuevo prescaler al TMR0
 	banksel PORTB
-	movf contador, W
-	call table_NTMR0128
-	movwf NTMR0
-	return
+	movf contador, W ;Movemos nuestra contador de frecuencias al acumulador
+	call table_NTMR0128 ;Mandamos a llamar a nuestra tabla que contiene los valores del TMR0
+	movwf NTMR0 ;Movemos el valor obtenido de la tabla al registro N del TMR0
+	return ;Retorna a donde fue llamada esta función
     END
